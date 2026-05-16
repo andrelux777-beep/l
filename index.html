@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>EduFiola - Znajdź swojego korepetytora</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #e8e0f0; min-height: 100vh; overflow-x: hidden; padding-bottom: 80px; }
+
+        .top-bar { position: fixed; top: 0; left: 0; width: 100%; background: #6b3fa0; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 102; }
+        .top-bar-left { display: flex; align-items: center; gap: 10px; }
+        .top-bar-logo { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .top-bar-title { font-size: 20px; font-weight: 800; color: white; }
+        .top-bar-title .edu { color: #d4c4e8; } .top-bar-title .fiola { color: #a8e6a8; }
+        .top-bar-bell { width: 28px; height: 28px; cursor: pointer; filter: brightness(0) saturate(100%) invert(92%) sepia(6%) saturate(369%) hue-rotate(216deg) brightness(97%) contrast(91%); }
+
+        .sub-header-bar { position: fixed; top: 64px; left: 0; width: 100%; background: #7ab87a; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; z-index: 101; }
+        .sub-header-back { color: #7ab87a; font-size: 16px; font-weight: 700; cursor: pointer; background: none; border: none; display: flex; align-items: center; gap: 4px; }
+        .sub-header-back .text { color: #6b3fa0; font-weight: 800; }
+        .sub-header-title { color: #6b3fa0; font-size: 14px; font-weight: 800; }
+        .filter-reset { color: #e8e0f0; font-size: 14px; font-weight: 600; cursor: pointer; background: none; border: none; }
+
+        .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #6b3fa0; padding: 10px 16px; display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .bottom-bar-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.2s; }
+        .bottom-bar-item img { width: 24px; height: 24px; filter: brightness(0) invert(1); transition: all 0.2s; }
+        .bottom-bar-item span { font-size: 10px; color: #e8e0f0; font-weight: 600; transition: all 0.2s; }
+        .bottom-bar-item.aktywny img { width: 28px; height: 28px; filter: brightness(0) saturate(100%) invert(85%) sepia(8%) saturate(500%) hue-rotate(80deg) brightness(95%) contrast(90%); }
+        .bottom-bar-item.aktywny span { color: #a8e6a8; font-size: 11px; font-weight: 800; }
+
+        .main-content { margin-top: 80px; padding: 20px 16px 0 16px; }
+
+        .green-section { background-color: #d4e8d4; padding: 20px 16px; margin: 10px -16px 0 -16px; border-top: 3px solid #6b3fa0; min-height: 100vh; }
+
+        .filter-page { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #e8e0f0; z-index: 99; overflow-y: auto; padding-top: 110px; padding-bottom: 70px; }
+        .filter-page.aktywna { display: block; }
+        .filter-page-content { padding: 20px 16px; }
+
+        .filter-bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #7ab87a; padding: 10px 16px; display: flex; justify-content: center; align-items: center; z-index: 101; }
+        .filter-bottom-btn { background: #6b3fa0; color: #e8e0f0; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+
+        .page { display: none; }
+        .page.aktywna { display: block; }
+
+        .filter-frame { background: #8b6fc0; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+        .filter-label { font-size: 14px; font-weight: 700; color: #e8e0f0; margin-bottom: 10px; }
+        .filter-select-box { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 8px 0; }
+        .filter-select-left { display: flex; align-items: center; gap: 10px; }
+        .filter-select-left img { width: 24px; height: 24px; filter: brightness(0) invert(1); }
+        .filter-select-left span { font-size: 15px; font-weight: 600; color: #e8e0f0; }
+        .filter-select-arrow { font-size: 16px; color: #e8e0f0; }
+        .filter-dropdown { display: none; margin-top: 8px; border-top: 1px solid #a080c8; padding-top: 8px; }
+        .filter-dropdown.otwarty { display: block; }
+        .filter-dropdown-item { padding: 10px 0; cursor: pointer; font-size: 14px; color: #e8e0f0; }
+
+        .price-range-display { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 14px; font-weight: 600; color: #e8e0f0; }
+        .range-slider-container { position: relative; height: 20px; margin: 0 13px 20px 13px; }
+        .range-slider-track { position: absolute; top: 7px; width: 100%; height: 6px; background: #a080c8; border-radius: 3px; }
+        .range-slider-fill { position: absolute; top: 7px; height: 6px; background: #e8e0f0; border-radius: 3px; }
+        .range-slider-thumb { position: absolute; top: 0; width: 26px; height: 26px; background: #e8e0f0; border-radius: 50%; cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(0,0,0,0.2); transform: translateX(-13px); }
+
+        .price-presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .price-preset-btn { padding: 10px 6px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; text-align: center; transition: all 0.2s; background: #a080c8; color: #e8e0f0; }
+        .price-preset-btn.aktywny { background: #e8e0f0; color: #6b3fa0; }
+
+        .mode-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .mode-btn { padding: 12px 6px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; text-align: center; transition: all 0.2s; background: #a080c8; color: #e8e0f0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .mode-btn img { width: 20px; height: 20px; filter: brightness(0) invert(1); }
+        .mode-btn.aktywny { background: #e8e0f0; color: #6b3fa0; }
+        .mode-btn.aktywny img { filter: none; }
+
+        .option-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .option-btn { padding: 12px 6px; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; border: none; text-align: center; transition: all 0.2s; background: #a080c8; color: #e8e0f0; }
+        .option-btn.aktywny { background: #e8e0f0; color: #6b3fa0; }
+
+        .checkbox-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; color: #e8e0f0; font-size: 14px; cursor: pointer; }
+        .checkbox-item input { width: 20px; height: 20px; accent-color: #6b3fa0; }
+
+        .city-input { width: 100%; padding: 12px; border-radius: 10px; border: none; background: white; color: #1a1a2e; font-size: 14px; margin-bottom: 8px; }
+        .city-suggestions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .city-tag { background: #a080c8; color: #e8e0f0; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; }
+
+        .hero-line1 { font-size: 32px; font-weight: 900; color: #7ab87a; line-height: 1.2; }
+        .hero-line2 { font-size: 32px; font-weight: 900; color: #6b3fa0; line-height: 1.2; }
+        .hero-description { font-size: 14px; color: #8b6fc0; margin-top: 12px; line-height: 1.5; }
+
+        .carousel-container { position: relative; width: 100%; overflow: hidden; border-radius: 20px; margin-top: 20px; }
+        .carousel-track { display: flex; transition: transform 0.4s ease-in-out; }
+        .carousel-slide { min-width: 100%; height: 180px; background: #6b3fa0; border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; font-weight: 600; }
+        .carousel-dots { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+        .carousel-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(107,63,160,0.3); cursor: pointer; transition: all 0.3s; }
+        .carousel-dot.aktywna { background: #6b3fa0; width: 28px; border-radius: 10px; }
+        .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(107,63,160,0.7); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .carousel-arrow.left { left: 10px; } .carousel-arrow.right { right: 10px; }
+
+        .filter-row { display: flex; gap: 8px; margin-top: 20px; align-items: flex-end; position: relative; flex-wrap: wrap; }
+        .filter-btn-wrapper { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .filter-label-small { font-size: 11px; font-weight: 700; color: #6b3fa0; text-transform: uppercase; letter-spacing: 0.5px; }
+        .filter-btn { background: #6b3fa0; color: #e8e0f0; border: none; padding: 10px 8px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; width: 100%; text-align: center; position: relative; }
+        .filter-icon-btn { width: 40px; height: 40px; border-radius: 10px; cursor: pointer; flex-shrink: 0; overflow: hidden; margin-left: 8px; }
+        .filter-icon-btn img { width: 100%; height: 100%; object-fit: cover; }
+
+        .inline-dropdown { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #8b6fc0; border-radius: 10px; margin-top: 4px; z-index: 50; overflow: hidden; }
+        .inline-dropdown.otwarty { display: block; }
+        .inline-dropdown-item { padding: 10px 14px; cursor: pointer; font-size: 13px; color: #e8e0f0; border-bottom: 1px solid #a080c8; }
+        .inline-dropdown-item:hover { background: #a080c8; }
+
+        .sort-dropdown { display: none; position: absolute; top: 100%; right: 0; background: #8b6fc0; border-radius: 10px; margin-top: 4px; z-index: 50; overflow: hidden; min-width: 150px; }
+        .sort-dropdown.otwarty { display: block; }
+        .sort-dropdown-item { padding: 10px 14px; cursor: pointer; font-size: 13px; color: #e8e0f0; border-bottom: 1px solid #a080c8; }
+
+        .results-bar { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; flex-wrap: wrap; gap: 8px; position: relative; }
+        .results-count { font-size: 14px; font-weight: 700; color: #1a1a2e; }
+        .sort-btn { background: #e8e0f0; border: 1px solid #6b3fa0; color: #6b3fa0; padding: 8px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        .korepetytor-card { border-radius: 16px; padding: 16px; margin-bottom: 16px; display: flex; gap: 12px; position: relative; }
+        .korepetytor-card.fiolet { background: #8b6fc0; }
+        .korepetytor-card.green-card { background: #9cc49c; animation: pulse 6s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.03);} }
+        .korepetytor-card .badge { position: absolute; top: 10px; left: 10px; padding: 5px 10px; border-radius: 10px; font-size: 11px; font-weight: 800; color: white; background: #22c55e; }
+        .korepetytor-card .badge.polecamy { background: #8b6fc0; border: 2px solid #6b3fa0; color: white; animation: borderPulse 2.5s ease-in-out infinite; }
+        @keyframes borderPulse { 0%,100%{border-color:#6b3fa0;} 50%{border-color:#c4a0e8;} }
+        .korepetytor-photo { width: 100px; height: 120px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+        .korepetytor-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .korepetytor-name-row { display: flex; align-items: center; gap: 8px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .status-dot.green{background:#22c55e;} .status-dot.yellow{background:#eab308;} .status-dot.red{background:#dc2626;}
+        .korepetytor-name { font-size: 18px; font-weight: 700; color: #e8e0f0; }
+        .korepetytor-subject { font-size: 14px; color: #e8e0f0; font-weight: 600; }
+        .korepetytor-city { font-size: 12px; color: #e8e0f0; margin-top: 2px; }
+        .korepetytor-rating { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 4px; color: #e8e0f0; }
+        .korepetytor-rating .star { color: #e8e0f0; font-size: 16px; }
+        .korepetytor-price-box { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+        .price-amount { font-size: 22px; font-weight: 900; color: #e8e0f0; }
+        .price-duration { font-size: 12px; color: #e8e0f0; }
+        .contact-row { display: flex; align-items: center; gap: 8px; }
+        .contact-btn { background: #22c55e; color: white; border: none; padding: 10px 18px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; }
+        .heart-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #e8e0f0; transition: all 0.2s; padding: 4px; }
+        .heart-btn.liked { color: #a8e6a8; }
+
+        .profile-card { background: #8b6fc0; border-radius: 16px; padding: 20px; margin: 16px 0; display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+        .profile-photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 3px solid #e8e0f0; }
+        .profile-info { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 6px; }
+        .profile-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+        .profile-info-item { font-size: 13px; color: #e8e0f0; }
+        .profile-info-item strong { color: white; display: block; font-size: 11px; margin-bottom: 2px; }
+        .edit-profile-btn { background: #22c55e; color: white; border: none; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; align-self: flex-end; margin-top: 8px; }
+
+        .green-panel { background: #7ab87a; border-radius: 16px; padding: 16px; margin-bottom: 16px; color: white; }
+        .green-panel-title { font-weight: 800; font-size: 16px; margin-bottom: 12px; color: white; }
+        .green-panel-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.3); cursor: pointer; font-weight: 600; }
+        .green-panel-item:last-child { border-bottom: none; }
+        .green-panel-arrow { font-size: 18px; color: white; }
+
+        .subpage-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #e8e0f0; z-index: 150; overflow-y: auto; padding-top: 64px; padding-bottom: 70px; }
+        .subpage-overlay.aktywna { display: block; }
+        .subpage-content { padding: 20px 16px; }
+
+        .chat-list-item { background: #8b6fc0; border-radius: 16px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: background 0.2s; }
+        .chat-list-item:hover { background: #7a5fa8; }
+        .chat-avatar { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #6b3fa0; }
+        .chat-info { flex: 1; min-width: 0; }
+        .chat-name { font-weight: 700; color: white; font-size: 15px; }
+        .chat-subject { font-size: 12px; color: #d4c4e8; }
+        .chat-last-msg-box { background: #d4e8d4; border-radius: 10px; padding: 6px 10px; margin-top: 4px; font-size: 13px; color: #1a1a2e; }
+        .chat-open-btn { background: #22c55e; color: white; border: none; padding: 8px 14px; border-radius: 18px; font-weight: 600; font-size: 12px; cursor: pointer; flex-shrink: 0; }
+
+        .chat-fullscreen { position: fixed; top: 64px; left: 0; width: 100%; height: calc(100% - 64px - 70px); background-image: url('Photo.jpg'); background-size: cover; background-position: center; z-index: 90; display: flex; flex-direction: column; }
+        .chat-fullscreen-inner { flex: 1; background: rgba(0,0,0,0.3); display: flex; flex-direction: column; padding: 16px; overflow-y: auto; }
+        .chat-messages { flex: 1; display: flex; flex-direction: column; gap: 12px; padding-right: 4px; }
+        .message-row { display: flex; gap: 8px; align-items: flex-end; }
+        .message-row.mine { justify-content: flex-end; }
+        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #6b3fa0; flex-shrink: 0; }
+        .msg-bubble { background: white; padding: 10px 14px; border-radius: 18px; font-size: 14px; max-width: 75%; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .message-row.mine .msg-bubble { background: #6b3fa0; color: white; }
+        .msg-sender { font-size: 11px; font-weight: 700; color: #6b3fa0; margin-bottom: 4px; }
+        .message-row.mine .msg-sender { color: #a8e6a8; }
+        .chat-input-row { display: flex; gap: 8px; padding: 12px 16px; background: rgba(0,0,0,0.5); transition: margin-bottom 0.3s; }
+        .chat-input { flex: 1; padding: 12px; border-radius: 24px; border: 1px solid #6b3fa0; font-size: 14px; outline: none; }
+        .chat-send-btn { background: #22c55e; color: white; border: none; padding: 12px 20px; border-radius: 24px; font-weight: 700; cursor: pointer; }
+
+        .empty-page { color: #6b3fa0; font-size: 15px; font-weight: 500; text-align: center; padding: 40px 20px; background: rgba(107,63,160,0.08); border-radius: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="top-bar" id="glownyTopBar">
+    <div class="top-bar-left"><img src="Logo.png" class="top-bar-logo" onerror="this.src='Logo.JPG'; this.onerror=null;"><span class="top-bar-title"><span class="edu">Edu</span><span class="fiola">Fiola</span></span></div>
+    <img src="Bell.png" class="top-bar-bell" onerror="this.src='Bell.jpg'; this.onerror=null;">
+</div>
+
+<div class="sub-header-bar" id="subHeaderBar" style="display:none;">
+    <button class="sub-header-back" id="subHeaderBackBtn"><span style="color:#6b3fa0;">←</span> <span class="text">Wróć</span></button>
+    <span class="sub-header-title" id="subHeaderTitle" style="text-align:right;flex:1;"></span>
+    <button class="filter-reset" id="subHeaderReset" style="display:none;" onclick="resetujFiltry()">Resetuj</button>
+</div>
+
+<div class="main-content" id="mainContent">
+    <div class="page aktywna" id="pageSzukaj">
+        <div class="hero-text"><div class="hero-line1">Znajdź swojego</div><div class="hero-line2">Korepetytora</div><div class="hero-description">Przygotuj się do matury, egzaminów szkolnych lub popraw swoją wiedzę</div></div>
+        <div class="carousel-container" id="karuzelaKontener"><button class="carousel-arrow left" onclick="poprzedniSlajd()">‹</button><button class="carousel-arrow right" onclick="nastepnySlajd()">›</button><div class="carousel-track" id="karuzelaSciezka"><div class="carousel-slide">Widget 1</div><div class="carousel-slide">Widget 2</div><div class="carousel-slide">Widget 3</div></div></div>
+        <div class="carousel-dots"><div class="carousel-dot aktywna" onclick="przejdzDoSlajdu(0)"></div><div class="carousel-dot" onclick="przejdzDoSlajdu(1)"></div><div class="carousel-dot" onclick="przejdzDoSlajdu(2)"></div></div>
+
+        <div class="filter-row">
+            <div class="filter-btn-wrapper" style="position:relative;">
+                <span class="filter-label-small">Przedmiot</span>
+                <button class="filter-btn" onclick="przelaczInlineDropdown('subjDrop')" id="subjBtn">Dowolny przedmiot ▾</button>
+                <div class="inline-dropdown" id="subjDrop"><div class="inline-dropdown-item" onclick="wybierzInlinePrzedmiot('Dowolny przedmiot')">Dowolny przedmiot</div><div class="inline-dropdown-item" onclick="wybierzInlinePrzedmiot('Matematyka')">Matematyka</div><div class="inline-dropdown-item" onclick="wybierzInlinePrzedmiot('Fizyka')">Fizyka</div><div class="inline-dropdown-item" onclick="wybierzInlinePrzedmiot('Chemia')">Chemia</div></div>
+            </div>
+            <div class="filter-btn-wrapper" style="position:relative;">
+                <span class="filter-label-small">Cena</span>
+                <button class="filter-btn" onclick="przelaczInlineDropdown('cenaDrop')" id="cenaBtn">Dowolna cena ▾</button>
+                <div class="inline-dropdown" id="cenaDrop"><div class="inline-dropdown-item" onclick="wybierzInlineCene('Dowolna cena')">Dowolna cena</div><div class="inline-dropdown-item" onclick="wybierzInlineCene('do 60 zł')">do 60 zł</div><div class="inline-dropdown-item" onclick="wybierzInlineCene('do 100 zł')">do 100 zł</div><div class="inline-dropdown-item" onclick="wybierzInlineCene('100+ zł')">100+ zł</div></div>
+            </div>
+            <div class="filter-btn-wrapper" style="position:relative;">
+                <span class="filter-label-small">Forma zajęć</span>
+                <button class="filter-btn" onclick="przelaczInlineDropdown('trybDrop')" id="trybBtn">Dowolnie ▾</button>
+                <div class="inline-dropdown" id="trybDrop"><div class="inline-dropdown-item" onclick="wybierzInlineTryb('Dowolnie')">Dowolnie</div><div class="inline-dropdown-item" onclick="wybierzInlineTryb('Online')">Online</div><div class="inline-dropdown-item" onclick="wybierzInlineTryb('Stacjonarnie')">Stacjonarnie</div></div>
+            </div>
+            <div class="filter-icon-btn" onclick="otworzFiltry()"><img src="Icon.jpg" alt="Filtry" onerror="this.style.background='#6b3fa0'; this.style.borderRadius='10px';"></div>
+        </div>
+
+        <div class="results-bar">
+            <div class="results-count">Znaleziono <span style="color:#6b3fa0;">3</span> korepetytorów</div>
+            <div style="position:relative;"><button class="sort-btn" onclick="przelaczSortDropdown()" id="sortBtn">Najlepsze ▾</button><div class="sort-dropdown" id="sortDrop"><div class="sort-dropdown-item" onclick="wybierzSort('Najlepsze')">Najlepsze</div><div class="sort-dropdown-item" onclick="wybierzSort('Najnowsze')">Najnowsze</div><div class="sort-dropdown-item" onclick="wybierzSort('Budżetowe')">Budżetowe</div><div class="sort-dropdown-item" onclick="wybierzSort('Wysokokosztowe')">Wysokokosztowe</div></div></div>
+        </div>
+    </div>
+
+    <div class="page" id="pageUlubione"><div id="ulubioneContainer" style="margin-top: 16px;"></div></div>
+    <div class="page" id="pageCzaty"><div id="czatyContainer" style="margin-top: 16px;"></div></div>
+    <div class="page" id="pageProfil">
+        <div class="profile-card">
+            <img src="ProfilePhoto.jpg" class="profile-photo" onerror="this.style.background='#6b3fa0'; this.style.minWidth='80px';">
+            <div class="profile-info">
+                <div class="profile-info-grid">
+                    <div class="profile-info-item"><strong>Imię i nazwisko:</strong>Jarosław Pupkin</div>
+                    <div class="profile-info-item"><strong>Email:</strong>jarosław@gmail.com</div>
+                    <div class="profile-info-item"><strong>Telefon:</strong>(+48) 123 456 789</div>
+                    <div class="profile-info-item"><strong>Status:</strong>Klient EduFiola</div>
+                    <div class="profile-info-item"><strong>Lokalizacja:</strong>Warszawa, Polska</div>
+                </div>
+                <button class="edit-profile-btn">Edytuj profil</button>
+            </div>
+        </div>
+        <div class="green-panel" id="historiaPanel">
+            <div class="green-panel-title">Historia przeglądania</div>
+            <div style="color: rgba(255,255,255,0.8); font-size: 14px;">Ostatnio oglądane profile</div>
+        </div>
+        <div class="green-panel" id="ustawieniaPanel">
+            <div class="green-panel-item" onclick="otworzPodstrone('mojeWiadomosci')"><span>Мои сообщения</span><span class="green-panel-arrow">›</span></div>
+            <div class="green-panel-item" onclick="otworzPodstrone('ustawienia')"><span>Настройки</span><span class="green-panel-arrow">›</span></div>
+            <div class="green-panel-item" onclick="otworzPodstrone('pomoc')"><span>Помощь и wsparcie</span><span class="green-panel-arrow">›</span></div>
+        </div>
+    </div>
+
+    <div class="green-section" id="greenSection">
+        <div class="korepetytor-card fiolet" data-tutor="Anna Petrovna"><img src="Tutor.jpg" class="korepetytor-photo" onerror="this.style.background='#6b3fa0';this.style.minWidth='100px';"><div class="korepetytor-info"><div><div class="korepetytor-name-row"><span class="status-dot green"></span><div class="korepetytor-name">Anna Petrovna</div></div><div class="korepetytor-subject">Matematyka</div><div class="korepetytor-city">m. Gdańsk</div><div class="korepetytor-rating"><span class="star">★</span><span>4,9</span><span>(127 opinii)</span></div></div></div><div class="korepetytor-price-box"><div class="price-amount">60 zł</div><div class="price-duration">za 60 minut</div><div class="contact-row"><button class="contact-btn">Skontaktuj się</button><button class="heart-btn" onclick="polubSerce(this, 'Anna Petrovna', 'Matematyka')">♡</button></div></div></div>
+        
+        <div class="korepetytor-card green-card" data-tutor="Petro Kovalenko"><div class="badge" id="animatedBadge"><span class="letter">B</span><span class="letter">a</span><span class="letter">r</span><span class="letter">d</span><span class="letter">z</span><span class="letter">o</span><span class="letter"> </span><span class="letter">p</span><span class="letter">o</span><span class="letter">l</span><span class="letter">e</span><span class="letter">c</span><span class="letter">a</span><span class="letter">m</span><span class="letter">y</span><span class="letter">!</span></div><img src="Tutor.jpg" class="korepetytor-photo" onerror="this.style.background='#6b3fa0';this.style.minWidth='100px';"><div class="korepetytor-info"><div><div class="korepetytor-name-row"><span class="status-dot yellow"></span><div class="korepetytor-name">Petro Kovalenko</div></div><div class="korepetytor-subject">Matematyka</div><div class="korepetytor-city">m. Gdańsk</div><div class="korepetytor-rating"><span class="star">★</span><span>4,9</span><span>(127 opinii)</span></div></div></div><div class="korepetytor-price-box"><div class="price-amount">60 zł</div><div class="price-duration">za 60 minut</div><div class="contact-row"><button class="contact-btn">Skontaktuj się</button><button class="heart-btn" onclick="polubSerce(this, 'Petro Kovalenko', 'Matematyka')">♡</button></div></div></div>
+
+        <div class="korepetytor-card fiolet" data-tutor="Olga Nowak"><div class="badge polecamy">Polecamy!</div><img src="Tutor.jpg" class="korepetytor-photo" onerror="this.style.background='#6b3fa0';this.style.minWidth='100px';"><div class="korepetytor-info"><div><div class="korepetytor-name-row"><span class="status-dot red"></span><div class="korepetytor-name">Olga Nowak</div></div><div class="korepetytor-subject">Matematyka</div><div class="korepetytor-city">m. Gdańsk</div><div class="korepetytor-rating"><span class="star">★</span><span>4,9</span><span>(127 opinii)</span></div></div></div><div class="korepetytor-price-box"><div class="price-amount">60 zł</div><div class="price-duration">za 60 minut</div><div class="contact-row"><button class="contact-btn">Skontaktuj się</button><button class="heart-btn" onclick="polubSerce(this, 'Olga Nowak', 'Matematyka')">♡</button></div></div></div>
+    </div>
+</div>
+
+<div class="bottom-bar" id="dolnyPasek">
+    <div class="bottom-bar-item aktywny" data-page="Szukaj"><img src="Search.png" onerror="this.style.background='#e8e0f0';this.style.width='24px';this.style.height='24px';this.style.borderRadius='4px';"><span>Szukaj</span></div>
+    <div class="bottom-bar-item" data-page="Ulubione"><img src="Favorites.png" onerror="this.style.background='#e8e0f0';this.style.width='24px';this.style.height='24px';this.style.borderRadius='4px';"><span>Ulubione</span></div>
+    <div class="bottom-bar-item" data-page="Czaty"><img src="Chats.png" onerror="this.style.background='#e8e0f0';this.style.width='24px';this.style.height='24px';this.style.borderRadius='4px';"><span>Czaty</span></div>
+    <div class="bottom-bar-item" data-page="Profil"><img src="Profile.png" onerror="this.style.background='#e8e0f0';this.style.width='24px';this.style.height='24px';this.style.borderRadius='4px';"><span>Profil</span></div>
+</div>
+
+<div class="filter-page" id="stronaFiltrow">
+    <div class="filter-page-content">
+        <div class="filter-frame"><div class="filter-label">Przedmiot</div><div class="filter-select-box" onclick="przelaczDropdown('przedmiotDropdown')"><div class="filter-select-left"><img src="Icon1.png" onerror="this.style.display='none'"><span id="wybranyPrzedmiot">Dowolny przedmiot</span></div><span class="filter-select-arrow">▾</span></div><div class="filter-dropdown" id="przedmiotDropdown"><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Dowolny przedmiot')">Dowolny przedmiot</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Matematyka')">Matematyka</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Fizyka')">Fizyka</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Chemia')">Chemia</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Biologia')">Biologia</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Język polski')">Język polski</div><div class="filter-dropdown-item" onclick="wybierzPrzedmiot('Język angielski')">Język angielski</div></div></div>
+        <div class="filter-frame"><div class="filter-label">Cena za zajęcie</div><div class="price-range-display"><span>Od <span id="cenaOdVal">0</span> zł</span><span>Do <span id="cenaDoVal">400</span> zł</span></div><div class="range-slider-container" id="rangeSliderContainer"><div class="range-slider-track"></div><div class="range-slider-fill" id="rangeFill" style="left:0%;width:100%;"></div><div class="range-slider-thumb" id="thumbOd" style="left:0%;"></div><div class="range-slider-thumb" id="thumbDo" style="left:100%;"></div></div><div class="price-presets"><button class="price-preset-btn aktywny" onclick="ustawPreset('wlasy')">Własny wybór</button><button class="price-preset-btn" onclick="ustawPreset('do60')">Do 60 zł</button><button class="price-preset-btn" onclick="ustawPreset('do100')">Do 100 zł</button><button class="price-preset-btn" onclick="ustawPreset('powyzej100')">Powyżej 100 zł</button></div></div>
+        <div class="filter-frame"><div class="filter-label">Miasto korepetytora</div><input type="text" class="city-input" placeholder="Wpisz miasto..." id="cityInput" oninput="filtrujMiasta()"><div class="city-suggestions" id="citySuggestions"><span class="city-tag" onclick="wybierzMiasto('Warszawa')">Warszawa</span><span class="city-tag" onclick="wybierzMiasto('Kraków')">Kraków</span><span class="city-tag" onclick="wybierzMiasto('Gdańsk')">Gdańsk</span><span class="city-tag" onclick="wybierzMiasto('Wrocław')">Wrocław</span><span class="city-tag" onclick="wybierzMiasto('Poznań')">Poznań</span><span class="city-tag" onclick="wybierzMiasto('Łódź')">Łódź</span></div></div>
+        <div class="filter-frame"><div class="filter-label">Tryb zajęć</div><div class="mode-buttons"><button class="mode-btn" onclick="wybierzTryb('online',this)"><img src="Icon2.png" onerror="this.style.display='none'">Online</button><button class="mode-btn" onclick="wybierzTryb('stacjonarnie',this)"><img src="Icon3.png" onerror="this.style.display='none'">Stacjonarnie</button><button class="mode-btn aktywny" onclick="wybierzTryb('dowolnie',this)"><img src="Icon4.png" onerror="this.style.display='none'">Dowolnie</button></div></div>
+        <div class="filter-frame"><div class="filter-label">Czas trwania zajęć</div><div class="option-buttons"><button class="option-btn" onclick="wybierzCzas('60',this)">60 min</button><button class="option-btn" onclick="wybierzCzas('90',this)">90 min</button><button class="option-btn" onclick="wybierzCzas('120',this)">120 min</button><button class="option-btn aktywny" onclick="wybierzCzas('dowolnie',this)">Dowolnie</button></div></div>
+        <div class="filter-frame"><div class="filter-label">Dodatkowe opcje</div><label class="checkbox-item"><input type="checkbox"> Tylko z opiniami</label><label class="checkbox-item"><input type="checkbox"> Jest zniżka</label><label class="checkbox-item"><input type="checkbox"> Dojazd do ucznia</label><label class="checkbox-item"><input type="checkbox"> Przygotowanie do egzaminów</label><label class="checkbox-item"><input type="checkbox"> Intensywne nauczanie</label><label class="checkbox-item"><input type="checkbox"> Elastyczny harmonogram</label></div></div>
+    </div>
+</div>
+
+<div class="subpage-overlay" id="subpagePodstrona">
+    <div class="subpage-content" id="subpageContent"></div>
+</div>
+
+<div class="filter-bottom-bar" id="filterBottomBar" style="display:none;"><button class="filter-bottom-btn" onclick="zamknijFiltry()">Pokaż 0 korepetytorów</button></div>
+
+<div class="chat-fullscreen" id="chatFullscreen" style="display:none;">
+    <div class="chat-fullscreen-inner" id="chatFullscreenInner"></div>
+    <div class="chat-input-row" id="chatFullscreenInputRow">
+        <input class="chat-input" id="chatFullscreenInput" placeholder="Napisz wiadomość...">
+        <button class="chat-send-btn" id="chatFullscreenSend">Wyślij</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        let aktualnySlajd=0,autoPrzewijanie,currentPage='Szukaj', currentChatKey=null;
+        const ulubieni = new Map();
+        const chaty = new Map();
+
+        function initChats() {
+            if (!chaty.has('Anna Petrovna')) {
+                chaty.set('Anna Petrovna', {
+                    name: 'Anna Petrovna',
+                    subject: 'Matematyka',
+                    avatar: 'Tutor.jpg',
+                    messages: [
+                        {from: 'teacher', text: 'Dzień dobry! Czy jutro o 15:00 pasuje na lekcję próbną?'}
+                    ]
+                });
+            }
+        }
+
+        function aktualizujKaruzele(){const s=document.getElementById('karuzelaSciezka');if(s)s.style.transform=`translateX(-${aktualnySlajd*100}%)`;document.querySelectorAll('.carousel-dot').forEach((k,i)=>k.classList.toggle('aktywna',i===aktualnySlajd));}
+        function przejdzDoSlajdu(i){aktualnySlajd=i;aktualizujKaruzele();resetujAutoPrzewijanie();}
+        function nastepnySlajd(){aktualnySlajd=(aktualnySlajd+1)%3;aktualizujKaruzele();resetujAutoPrzewijanie();}
+        function poprzedniSlajd(){aktualnySlajd=(aktualnySlajd-1+3)%3;aktualizujKaruzele();resetujAutoPrzewijanie();}
+        function uruchomAutoPrzewijanie(){autoPrzewijanie=setInterval(nastepnySlajd,5000);}
+        function resetujAutoPrzewijanie(){clearInterval(autoPrzewijanie);uruchomAutoPrzewijanie();}
+
+        function switchPage(name){
+            currentPage=name;
+            document.querySelectorAll('.page').forEach(p=>p.classList.remove('aktywna'));
+            const pe=document.getElementById('page'+name);if(pe)pe.classList.add('aktywna');
+            document.getElementById('greenSection').style.display=(name==='Szukaj')?'block':'none';
+            document.getElementById('subHeaderBar').style.display=(name==='Szukaj'||name==='Profil')?'none':'flex';
+            if(name==='Ulubione'){document.getElementById('subHeaderTitle').innerText='';document.getElementById('subHeaderReset').style.display='none';document.getElementById('subHeaderBackBtn').onclick=()=>switchPage('Szukaj');renderUlubione();}
+            else if(name==='Czaty'){document.getElementById('subHeaderTitle').innerText='';document.getElementById('subHeaderReset').style.display='none';document.getElementById('subHeaderBackBtn').onclick=()=>switchPage('Szukaj');renderCzaty();}
+            if(name==='Szukaj')aktualizujKaruzele();
+            if(name==='Profil'){ ensureProfilePanels(); }
+            document.querySelectorAll('.bottom-bar-item').forEach(i=>i.classList.remove('aktywny'));
+            const ab=document.querySelector(`.bottom-bar-item[data-page="${name}"]`);if(ab)ab.classList.add('aktywny');
+            document.getElementById('chatFullscreen').style.display = 'none';
+            document.getElementById('dolnyPasek').style.display = 'flex';
+        }
+
+        function ensureProfilePanels() {
+            if (!document.getElementById('historiaPanel')) {
+                const pageProfil = document.getElementById('pageProfil');
+                if (pageProfil) {
+                    const existing = pageProfil.querySelector('.green-panel');
+                    if (!existing) {
+                        const historia = document.createElement('div'); historia.className='green-panel'; historia.id='historiaPanel';
+                        historia.innerHTML = '<div class="green-panel-title">Historia przeglądania</div><div style="color: rgba(255,255,255,0.8); font-size: 14px;">Ostatnio oglądane profile</div>';
+                        const ustawienia = document.createElement('div'); ustawienia.className='green-panel'; ustawienia.id='ustawieniaPanel';
+                        ustawienia.innerHTML = `<div class="green-panel-item" onclick="otworzPodstrone('mojeWiadomosci')"><span>Мои сообщения</span><span class="green-panel-arrow">›</span></div><div class="green-panel-item" onclick="otworzPodstrone('ustawienia')"><span>Настройки</span><span class="green-panel-arrow">›</span></div><div class="green-panel-item" onclick="otworzPodstrone('pomoc')"><span>Помощь и wsparcie</span><span class="green-panel-arrow">›</span></div>`;
+                        pageProfil.appendChild(historia); pageProfil.appendChild(ustawienia);
+                    }
+                }
+            }
+        }
+
+        window.polubSerce = function(btn, tutorName, subject) {
+            btn.classList.toggle('liked');
+            btn.innerHTML = btn.classList.contains('liked') ? '♥' : '♡';
+            if (btn.classList.contains('liked')) {
+                ulubieni.set(tutorName, { name: tutorName, subject: subject, avatar: 'Tutor.jpg' });
+            } else {
+                ulubieni.delete(tutorName);
+            }
+            if (currentPage === 'Ulubione') renderUlubione();
+        };
+
+        function renderUlubione() {
+            const container = document.getElementById('ulubioneContainer');
+            if (!container) return;
+            if (ulubieni.size === 0) {
+                container.innerHTML = '<div class="empty-page">⏳ Tutaj jest pusto. Wybierz nauczyciela.</div>';
+                return;
+            }
+            let html = '';
+            ulubieni.forEach((tutor) => {
+                html += `<div class="korepetytor-card fiolet" style="margin-top:12px;"><img src="${tutor.avatar}" class="korepetytor-photo" onerror="this.style.background='#6b3fa0';this.style.minWidth='100px';"><div class="korepetytor-info"><div><div class="korepetytor-name">${tutor.name}</div><div class="korepetytor-subject">${tutor.subject}</div></div></div><button class="heart-btn liked" onclick="polubSerce(this, '${tutor.name}', '${tutor.subject}')">♥</button></div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderCzaty() {
+            const container = document.getElementById('czatyContainer');
+            if (!container) return;
+            initChats();
+            if (chaty.size === 0) {
+                container.innerHTML = '<div class="empty-page">Brak wiadomości</div>';
+                return;
+            }
+            let html = '';
+            chaty.forEach((chat, key) => {
+                const lastMsg = chat.messages.length ? chat.messages[chat.messages.length-1] : null;
+                let msgHtml = '';
+                if (lastMsg) {
+                    const sender = lastMsg.from === 'teacher' ? 'Преподаватель' : 'Я';
+                    msgHtml = `<div class="chat-last-msg-box">${sender}: ${lastMsg.text}</div>`;
+                }
+                html += `<div class="chat-list-item">
+                    <img src="${chat.avatar}" class="chat-avatar" onerror="this.style.background='#6b3fa0';">
+                    <div class="chat-info"><div class="chat-name">${chat.name}</div><div class="chat-subject">${chat.subject}</div>${msgHtml}</div>
+                    <button class="chat-open-btn" onclick="otworzChat('${key}')">Otwórz czat</button>
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        window.otworzChat = function(tutorKey) {
+            const chat = chaty.get(tutorKey);
+            if (!chat) return;
+            currentChatKey = tutorKey;
+            document.getElementById('chatFullscreen').style.display = 'flex';
+            document.getElementById('dolnyPasek').style.display = 'none';
+            document.getElementById('subHeaderBar').style.display = 'flex';
+            document.getElementById('subHeaderTitle').innerText = '';
+            document.getElementById('subHeaderReset').style.display = 'none';
+            document.getElementById('subHeaderBackBtn').onclick = zamknijChat;
+            renderChatMessages();
+            document.getElementById('chatFullscreenSend').onclick = () => wyslijWiadomoscFullscreen();
+            setTimeout(() => {
+                document.getElementById('chatFullscreenInput').focus();
+                adjustFullscreenChat(true);
+            }, 100);
+        };
+
+        function renderChatMessages() {
+            if (!currentChatKey) return;
+            const chat = chaty.get(currentChatKey);
+            let messagesHtml = '';
+            chat.messages.forEach(msg => {
+                const sender = msg.from === 'teacher' ? 'Преподаватель' : 'Я';
+                const isMine = msg.from === 'me';
+                messagesHtml += `<div class="message-row ${isMine ? 'mine' : ''}">
+                    ${!isMine ? `<img src="${chat.avatar}" class="msg-avatar" onerror="this.style.background='#6b3fa0';">` : ''}
+                    <div><div class="msg-sender">${sender}:</div><div class="msg-bubble">${msg.text}</div></div>
+                    ${isMine ? `<img src="ProfilePhoto.jpg" class="msg-avatar" onerror="this.style.background='#6b3fa0';">` : ''}
+                </div>`;
+            });
+            document.getElementById('chatFullscreenInner').innerHTML = `<div class="chat-messages">${messagesHtml}</div>`;
+        }
+
+        function adjustFullscreenChat(up) {
+            const row = document.getElementById('chatFullscreenInputRow');
+            if (!row) return;
+            row.style.marginBottom = up ? '300px' : '0px';
+        }
+
+        document.addEventListener('click', function(e) {
+            const fs = document.getElementById('chatFullscreen');
+            if (fs.style.display === 'flex' && !fs.contains(e.target)) {
+                adjustFullscreenChat(false);
+            } else if (fs.style.display === 'flex' && e.target.closest('#chatFullscreenInputRow')) {
+                adjustFullscreenChat(true);
+            }
+        });
+
+        function wyslijWiadomoscFullscreen() {
+            const input = document.getElementById('chatFullscreenInput');
+            if (!input || !input.value.trim() || !currentChatKey) return;
+            const chat = chaty.get(currentChatKey);
+            chat.messages.push({from: 'me', text: input.value.trim()});
+            input.value = '';
+            renderChatMessages();
+            input.focus();
+        }
+
+        function zamknijChat() {
+            document.getElementById('chatFullscreen').style.display = 'none';
+            document.getElementById('dolnyPasek').style.display = 'flex';
+            switchPage('Czaty');
+        }
+
+        window.otworzPodstrone = function(typ) {
+            const subpage = document.getElementById('subpagePodstrona');
+            const content = document.getElementById('subpageContent');
+            subpage.classList.add('aktywna');
+            document.getElementById('subHeaderBar').style.display = 'flex';
+            document.getElementById('subHeaderTitle').innerText = '';
+            document.getElementById('subHeaderReset').style.display = 'none';
+            document.getElementById('subHeaderBackBtn').onclick = () => {
+                subpage.classList.remove('aktywna');
+                if (currentPage === 'Profil') {
+                    document.getElementById('subHeaderBar').style.display = 'none';
+                }
+            };
+            content.innerHTML = '<div class="empty-page">Funkcja w przygotowaniu</div>';
+        };
+
+        function otworzFiltry(){
+            document.getElementById('stronaFiltrow').classList.add('aktywna');
+            document.getElementById('subHeaderBar').style.display='flex';
+            document.getElementById('subHeaderTitle').innerText='';
+            document.getElementById('subHeaderReset').style.display='block';
+            document.getElementById('subHeaderBackBtn').onclick=zamknijFiltry;
+            document.getElementById('filterBottomBar').style.display='flex';
+            document.getElementById('dolnyPasek').style.display='none';
+            synchFilFromMain();
+        }
+        function zamknijFiltry(){
+            document.getElementById('stronaFiltrow').classList.remove('aktywna');
+            document.getElementById('filterBottomBar').style.display='none';
+            document.getElementById('dolnyPasek').style.display='flex';
+            synchMainFromFil();
+            if(currentPage==='Szukaj'||currentPage==='Profil')document.getElementById('subHeaderBar').style.display='none';
+            else switchPage(currentPage);
+        }
+        function resetujFiltry(){wybierzPrzedmiot('Dowolny przedmiot');ustawPreset('wlasy');document.getElementById('cityInput').value='';wybierzInlinePrzedmiot('Dowolny przedmiot');wybierzInlineCene('Dowolna cena');wybierzInlineTryb('Dowolnie');}
+        function przelaczDropdown(id){document.getElementById(id).classList.toggle('otwarty');}
+        function wybierzPrzedmiot(p){document.getElementById('wybranyPrzedmiot').innerText=p;document.getElementById('przedmiotDropdown').classList.remove('otwarty');}
+
+        function przelaczInlineDropdown(id){
+            document.querySelectorAll('.inline-dropdown').forEach(d=>{if(d.id!==id)d.classList.remove('otwarty');});
+            document.getElementById(id).classList.toggle('otwarty');
+        }
+        function wybierzInlinePrzedmiot(p){
+            document.getElementById('subjBtn').innerHTML=p+' ▾';
+            document.getElementById('subjDrop').classList.remove('otwarty');
+            document.getElementById('wybranyPrzedmiot').innerText=p;
+        }
+        function wybierzInlineCene(c){
+            document.getElementById('cenaBtn').innerHTML=c+' ▾';
+            document.getElementById('cenaDrop').classList.remove('otwarty');
+        }
+        function wybierzInlineTryb(t){
+            document.getElementById('trybBtn').innerHTML=t+' ▾';
+            document.getElementById('trybDrop').classList.remove('otwarty');
+        }
+        function synchFilFromMain(){
+            document.getElementById('wybranyPrzedmiot').innerText=document.getElementById('subjBtn').innerText.replace(' ▾','');
+            const ct=document.getElementById('cenaBtn').innerText.replace(' ▾','');
+            if(ct==='do 60 zł')ustawPreset('do60');
+            else if(ct==='do 100 zł')ustawPreset('do100');
+            else if(ct==='100+ zł')ustawPreset('powyzej100');
+            else ustawPreset('wlasy');
+        }
+        function synchMainFromFil(){
+            document.getElementById('subjBtn').innerHTML=document.getElementById('wybranyPrzedmiot').innerText+' ▾';
+        }
+
+        function przelaczSortDropdown(){document.getElementById('sortDrop').classList.toggle('otwarty');}
+        function wybierzSort(s){document.getElementById('sortBtn').innerHTML=s+' ▾';document.getElementById('sortDrop').classList.remove('otwarty');}
+
+        let dragging=null;const minVal=0,maxVal=400;
+        function aktualizujWypelnienie(){const oL=parseFloat(document.getElementById('thumbOd').style.left)||0;const dL=parseFloat(document.getElementById('thumbDo').style.left)||100;document.getElementById('rangeFill').style.left=oL+'%';document.getElementById('rangeFill').style.width=(dL-oL)+'%';document.getElementById('cenaOdVal').innerText=Math.round(minVal+(maxVal-minVal)*oL/100);document.getElementById('cenaDoVal').innerText=Math.round(minVal+(maxVal-minVal)*dL/100);}
+        function getPercent(e){const r=document.getElementById('rangeSliderContainer').getBoundingClientRect();const x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;return Math.max(0,Math.min(100,(x/r.width)*100));}
+        document.getElementById('thumbOd').addEventListener('mousedown',()=>dragging='od');
+        document.getElementById('thumbDo').addEventListener('mousedown',()=>dragging='do');
+        document.addEventListener('mousemove',(e)=>{if(!dragging)return;const p=getPercent(e);const oP=parseFloat(document.getElementById('thumbOd').style.left)||0;const dP=parseFloat(document.getElementById('thumbDo').style.left)||100;if(dragging==='od'&&p<dP-5)document.getElementById('thumbOd').style.left=p+'%';else if(dragging==='do'&&p>oP+5)document.getElementById('thumbDo').style.left=p+'%';aktualizujWypelnienie();ustawPreset('wlasy');});
+        document.addEventListener('mouseup',()=>dragging=null);
+
+        function ustawPreset(p){document.querySelectorAll('.price-preset-btn').forEach(b=>b.classList.remove('aktywny'));if(p==='do60'){document.getElementById('thumbOd').style.left='0%';document.getElementById('thumbDo').style.left='15%';document.querySelectorAll('.price-preset-btn')[1].classList.add('aktywny');}else if(p==='do100'){document.getElementById('thumbOd').style.left='0%';document.getElementById('thumbDo').style.left='25%';document.querySelectorAll('.price-preset-btn')[2].classList.add('aktywny');}else if(p==='powyzej100'){document.getElementById('thumbOd').style.left='25%';document.getElementById('thumbDo').style.left='100%';document.querySelectorAll('.price-preset-btn')[3].classList.add('aktywny');}else{document.querySelectorAll('.price-preset-btn')[0].classList.add('aktywny');}aktualizujWypelnienie();}
+        function wybierzTryb(t,b){b.parentElement.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('aktywny'));b.classList.add('aktywny');}
+        function wybierzCzas(c,b){b.parentElement.querySelectorAll('.option-btn').forEach(x=>x.classList.remove('aktywny'));b.classList.add('aktywny');}
+        function wybierzMiasto(m){document.getElementById('cityInput').value=m;}
+        function filtrujMiasta(){const v=document.getElementById('cityInput').value.toLowerCase();document.querySelectorAll('.city-tag').forEach(t=>t.style.display=t.innerText.toLowerCase().includes(v)?'inline-block':'none');}
+
+        document.querySelectorAll('.bottom-bar-item').forEach(item=>{item.addEventListener('click',function(){switchPage(this.dataset.page);});});
+
+        document.addEventListener('click',function(e){
+            if(!e.target.closest('.filter-btn')&&!e.target.closest('.inline-dropdown')){document.querySelectorAll('.inline-dropdown').forEach(d=>d.classList.remove('otwarty'));}
+            if(!e.target.closest('.sort-btn')&&!e.target.closest('.sort-dropdown')){document.getElementById('sortDrop').classList.remove('otwarty');}
+        });
+
+        let letterIndex=0;
+        const letters=document.querySelectorAll('#animatedBadge .letter');
+        if(letters.length>0){
+            setInterval(()=>{
+                letters.forEach(l=>l.style.color='white');
+                if(letterIndex<letters.length){letters[letterIndex].style.color='#6b3fa0';letterIndex++;}else{letterIndex=0;letters[0].style.color='#6b3fa0';letterIndex=1;}
+            },250);
+        }
+
+        initChats();
+        uruchomAutoPrzewijanie();
+        window.switchPage = switchPage;
+        window.ensureProfilePanels = ensureProfilePanels;
+    })();
+</script>
+</body>
+</html>
